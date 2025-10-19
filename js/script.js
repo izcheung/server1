@@ -2,7 +2,7 @@
 import { messages } from "../lang/en/en.js";
 
 const SERVER_URL = "https://comp4537lab5-6d0f.onrender.com";
-// const SERVER_URL = 'http://localhost:8001"
+// const SERVER_URL = "http://localhost:8000";
 
 class SqlQuery {
   async handleGet(endpoint, responseElement) {
