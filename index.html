@@ -8,18 +8,23 @@
 </head>
 
 <body>
+    <!-- Fixed SQL insert -->
     <div>
-        <button id="postButton"></button>
+        <p id="definedQueryDescription"></p>
+        <button id="definedQueryButton"></button>
     </div>
-    <div id="buttonResult" style="margin-bottom: 20px;"></div>
-    <form id="sqlForm">
-        <textarea id="sqlArea" required></textarea>
-        <button type="submit" id="submitButton"></button>
-    </form>
-    <div id="submitResult"></div>
-    <script type="module" src="../lang/en/en.js"></script>
-    <script type="module" src="./js/script.js"></script>
+    <div id="definedQueryResult" style="margin-bottom: 20px;"></div>
 
+    <!-- Text Area / Custom SQL query -->
+    <div>
+        <p id="textareaPurpose"></p>
+
+        <textarea id="sqlArea" rows="5" cols="80" required></textarea>
+        <button id="customQueryButton"></button>
+        <div id="customQueryResult"></div>
+    </div>
+    <script type="module" src="./lang/en/en.js"></script>
+    <script type="module" src="./js/script.js"></script>
 </body>
 
 </html>
