@@ -1,131 +1,169 @@
 import { messages } from "../lang/en/en.js";
 
-const rowData = [
-  { name: "Sara Brown", dob: "1901-01-01" },
-  { name: "John Smith", dob: "1941-01-01" },
-  { name: "Jack Ma", dob: "1961-01-30" },
-  { name: "Elon Musk", dob: "1999-01-01" },
-];
+const SERVER_URL = "https://comp4537lab5-6d0f.onrender.com"; //'http://localhost:8001
 
-const endpoint = "";
+class SqlQuery {
+  async handleGet(endpoint, responseElement) {
+    try {
+      const response = await fetch(endpoint, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-class ButtonArea {
-  constructor() {
-    this.button = document.getElementById("postButton");
-    this.button.textContent = messages.firstButtonText;
+      console.log("Response from GET:", response);
+      if (!response.ok) {
+        const errorResult = await response.json();
+        responseElement.innerHTML = messages.requestFailed
+          .replace("%1", response.status)
+          .replace("%2", errorResult.message);
+        return;
+      }
 
-    this.button.addEventListener("click", () => this.handleButtonClick());
-    this.response = document.getElementById("buttonResult");
+      const result = await response.json();
+      console.log("Response body from GET:", result);
+      responseElement.innerHTML = `
+        <p><strong>Message:</strong> ${result.message}</p>
+        <pre><strong>Data:</strong> ${JSON.stringify(
+          result.data,
+          null,
+          2
+        )}</pre>
+      `;
+    } catch (error) {
+      console.log("GET request error:", error);
+      responseElement.innerHTML = messages.serverError.replace("%1", error);
+    }
   }
 
-  async handleButtonClick() {
-    console.log("add data");
-    //     try {
-    //       const response = await fetch(endpoint, {
-    //         method: "POST",
-    //         headers: {
-    //           "Content-Type": "application/json",
-    //         },
-    //         body: JSON.stringify(rowData),
-    //       });
+  async handlePost(endpoint, data, query, responseElement) {
+    let bodyContent;
+    if (data !== undefined) {
+      bodyContent = data;
+    } else if (query !== undefined) {
+      bodyContent = { query: query };
+    } else {
+      bodyContent = {};
+    }
 
-    //       if (!response.ok) {
-    //         this.response.innerHTML = response;
-    //       }
-
-    //       const result = await response.json();
-
-    //       response.innerHTML = result; // Change
-    //     } catch (error) {
-    //       response.innerHTML = result; // Change
-    //     }
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(bodyContent),
+      });
+      console.log("Response from POST:", response);
+      if (!response.ok) {
+        const errorResult = await response.json();
+        responseElement.innerHTML = messages.requestFailed
+          .replace("%1", response.status)
+          .replace("%2", errorResult.message);
+        return;
+      }
+      const result = await response.json();
+      console.log("Response body from POST:", result);
+      responseElement.innerHTML = result.message;
+    } catch (error) {
+      console.log("POST request error:", error);
+      responseElement.innerHTML = messages.serverError.replace("%1", error);
+    }
   }
 }
 
-class TextArea {
+class DefinedQuery {
   constructor() {
-    this.form = document.getElementById("sqlForm");
-    this.textarea = document.getElementById("sqlArea");
-    this.textarea.placeholder = messages.textAreaPlaceholder;
-    this.submitResult = document.getElementById("submitResult");
-    this.form.addEventListener("submit", (event) => {
-      event.preventDefault();
-      this.handleSubmit(event);
-    });
-    this.button = document.getElementById("submitButton");
-    this.button.textContent = messages.secondButtonText;
+    this.definedQueryDescription = document.getElementById(
+      "definedQueryDescription"
+    );
+    this.definedQueryDescription.textContent = messages.definedQueryDescription;
+    this.button = document.getElementById("definedQueryButton");
+    this.button.textContent = messages.definedQueryButtonText;
+
+    this.button.addEventListener("click", () => this.handleButtonClick());
+
+    this.responseElement = document.getElementById("definedQueryResult");
+    this.endpoint = `${SERVER_URL}/insert-data`;
+    this.sqlQuery = new SqlQuery();
   }
 
-  handleSubmit() {
+  async handleButtonClick() {
+    const fixedData = [
+      {
+        name: "Sara Brown",
+        dateOfBirth: "1901-01-01",
+      },
+      {
+        name: "John Smith",
+        dateOfBirth: "1941-01-01",
+      },
+      { name: "Jack Ma", dateOfBirth: "1961-01-30" },
+      { name: "Elon Musk", dateOfBirth: "1999-01-01" },
+    ];
+
+    this.sqlQuery.handlePost(
+      this.endpoint,
+      fixedData,
+      undefined,
+      this.responseElement
+    );
+  }
+}
+
+class CustomQuery {
+  constructor() {
+    this.textareaPurpose = document.getElementById("textareaPurpose");
+    this.textareaPurpose.textContent = messages.textareaPurpose;
+
+    this.textarea = document.getElementById("sqlArea");
+    this.textarea.placeholder = messages.textAreaPlaceholder;
+
+    this.button = document.getElementById("customQueryButton");
+    this.button.textContent = messages.customQueryButtonText;
+
+    this.button.addEventListener("click", () => this.executeCustomQuery());
+
+    this.responseElement = document.getElementById("customQueryResult");
+
+    this.endpoint = `${SERVER_URL}/execute-query`;
+    this.sqlQuery = new SqlQuery();
+  }
+
+  executeCustomQuery() {
     const query = this.textarea.value.trim();
 
     if (!query) {
-      this.submitResult.textContent = messages.emptyQuery;
+      this.responseElement.textContent = messages.emptyQuery;
       return;
     }
+    this.handleGetOrPost(query);
+  }
 
+  handleGetOrPost(query) {
     const firstWord = query.split(" ")[0].toUpperCase();
 
     if (firstWord === "SELECT") {
-      this.handleGet(query);
+      const url = `${this.endpoint}?query=${encodeURIComponent(query)}`;
+      this.sqlQuery.handleGet(url, this.responseElement);
     } else if (firstWord === "INSERT") {
-      this.handlePost(query);
+      this.sqlQuery.handlePost(
+        this.endpoint,
+        undefined,
+        query,
+        this.responseElement
+      );
     } else {
-      this.submitResult.textContent = messages.unknownSQLCommand;
+      this.responseElement.textContent = messages.unsupportedSQLQuery;
     }
-  }
-
-  async handleGet() {
-    this.submitResult.textContent = "GET SUCCESS"; // Change
-    // try {
-    //   const response = await fetch(endpoint, {
-    //     method: "GET",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //     body: JSON.stringify(rowData),
-    //   });
-
-    //   if (!response.ok) {
-    //     this.submitResult.innerHTML = response;
-    //   }
-
-    //   const result = await response.json();
-
-    //   this.submitResult.innerHTML = result; // Change
-    // } catch (error) {
-    //   this.submitResult.innerHTML = result; // Change
-    // }
-  }
-
-  async handlePost() {
-    this.submitResult.textContent = "POST SUCCESS"; // Change
-    // try {
-    //   const response = await fetch(endpoint, {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //     body: JSON.stringify(rowData),
-    //   });
-
-    //   if (!response.ok) {
-    //     this.submitResult.innerHTML = response;
-    //   }
-
-    //   const result = await response.json();
-
-    //   this.submitResult.innerHTML = result; // Change
-    // } catch (error) {
-    //   this.submitResult.innerHTML = result; // Change
-    // }
   }
 }
 
 class Server {
   constructor() {
-    this.button = new ButtonArea();
-    this.textArea = new TextArea();
+    this.definedQuery = new DefinedQuery();
+    this.customQuery = new CustomQuery();
   }
 }
 
