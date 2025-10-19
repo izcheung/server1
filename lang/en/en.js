@@ -17,4 +17,5 @@ export const messages = {
   unsupportedSQLQuery: "Only SELECT and INSERT queries allowed",
   requestFailed: `Request failed with status %1: %2`,
   serverError: `Network or Server Error:: %1`,
+  unknownError: "Unknown server error",
 };

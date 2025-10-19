@@ -57,10 +57,13 @@ class SqlQuery {
       });
       console.log("Response from POST:", response);
       if (!response.ok) {
-        const errorResult = await response.json();
+        let errorResult = {};
+        try {
+          errorResult = await response.json();
+        } catch (e) {}
         responseElement.innerHTML = messages.requestFailed
           .replace("%1", response.status)
-          .replace("%2", errorResult.message);
+          .replace("%2", errorResult.message || messages.unknownError);
         return;
       }
       const result = await response.json();
