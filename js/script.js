@@ -1,3 +1,4 @@
+// ChatGPT was used to double check the code and find places to refactor
 import { messages } from "../lang/en/en.js";
 
 const SERVER_URL = "https://comp4537lab5-6d0f.onrender.com"; //'http://localhost:8001
@@ -57,6 +58,7 @@ class SqlQuery {
       });
       console.log("Response from POST:", response);
       if (!response.ok) {
+        // chatgpt was used here to implement the suggestion try and catch
         let errorResult = {};
         try {
           errorResult = await response.json();
